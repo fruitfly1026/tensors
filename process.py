@@ -12,7 +12,7 @@ def printf(format, *args):
         sys.stdout.write(format % args)
 
 
-def summarize(infname, outfname):
+def summarize(infname):
 	# Max size of each dimenstion of tensor
 	i_max=0
 	j_max=0
@@ -131,7 +131,7 @@ def main():
 	(options, args) = parser.parse_args()
 
 	if options.summarize:
-		summarize(options.in_fname, options.out_fname)
+		summarize(options.in_fname)
 	elif options.convert:
 		if options.in_format == "amazon.json" and options.out_format == "dictionary":
 			convert_amazon_to_dict(options.dict_field, options.text_field, options.in_fname, options.out_fname)
