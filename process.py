@@ -95,37 +95,47 @@ def convert_amazon_to_tensor(products_fname, reviewers_fname, vocabulary_fname, 
 					outf.write(str(reviewerID)+" "+str(asin)+" "+str(word_id)+"\n")
 	outf.close()
 
-
 def main():
 	usage = "usage: %prog [options] arg"
 	parser = OptionParser(usage)
 	parser.add_option("-i", "--infile",
+			help="input file (supported file types: json.gz)",
 			action="store", dest="in_fname")
 	parser.add_option("-o", "--outfile",
+			help="output file (supported file types: dictionary or tensor)",
 			action="store", dest="out_fname")
 
 	parser.add_option("-s", "--summarize",
+			help="summarize the input file (supported file types: tensor)",
 			action="store_true", dest="summarize")
 
 	parser.add_option("-c", "--convert",
+			help="convert the input file from informat to outformat",
 			action="store_true", dest="convert")
 	parser.add_option("-x", "--informat",
+			help="input file format for conversion (supported formats: amazon.json)",
 			action="store", dest="in_format")
 	parser.add_option("-X", "--outformat",
+			help="output file format for conversion (supported formats: dictionary or tensor)",
 			action="store", dest="out_format")
 
 	# create a dictionary for the field entries
 	parser.add_option("-f", "--dictfield",
+			help="field for which to generate dictionary",
 			action="store", dest="dict_field")
 	parser.add_option("-t", "--textfield",
+			help="field contains vocubulary text",
 			action="store_true", dest="text_field")
 
 	# specific to amazon input
 	parser.add_option("-p", "--products",
+			help="specific to amazon: asin field for tensor generation",
 			action="store", dest="products_dict_fname")
 	parser.add_option("-r", "--reviewers",
+			help="specific to amazon: reviewerID field for tensor generation",
 			action="store", dest="reviewers_dict_fname")
 	parser.add_option("-w", "--vocabulary",
+			help="specific to amazon: reviewText field for tensor generation",
 			action="store", dest="vocabulary_dict_fname")
 
 	(options, args) = parser.parse_args()
