@@ -61,13 +61,39 @@ def convert_amazon_to_dict(dict_field, is_text, in_fname, out_fname):
 	with open(out_fname, 'wb') as outf:
 		pickle.dump(field_dict, outf)
 
+def unique_list(l):
+	ulist = []
+	[ulist.append(x) for x in l if x not in ulist]
+	return ulist
 
 def convert_amazon_to_tensor(products_fname, reviewers_fname, vocabulary_fname, in_fname, out_fname):
 	printf('Reading products/reviewers dictionary and the vocabulary ...\n')
-	with open(dict_fname, 'rb') as dictf:
-		product_dict = pickle.loads(dictf.read())
+	reviewer_field="reviewerID"
+	product_field="asin"
+	review_field="reviewText"
+	
+	with open(products_fname, 'rb') as pdictf:
+		products_dict = pickle.loads(pdictf.read())
 #	for k in sorted(mydict.keys()):
 #		printf('%s -> %d\n', k , mydict[k])
+	with open(reviewers_fname, 'rb') as rdictf:
+		reviewers_dict = pickle.loads(rdictf.read())
+	with open(vocabulary_fname, 'rb') as vdictf:
+		vocabulary_dict = pickle.loads(vdictf.read())
+
+	outf = open(out_fname, 'wb')
+	for entry in parse_amazon(in_fname):
+		if entry.has_key(reviewer_field) and entry.has_key(product_field) and entry.has_key(review_field):
+			reviewerID = reviewers_dict[entry[reviewer_field]]
+			asin = products_dict[entry[product_field]]
+			reviewtext = entry[review_field]
+			words = unique_list(reviewtext.split())
+			for word in words:
+				stemmed_word = stem(word)
+				if stemmed_word in vocabulary_dict:
+					word_id = vocabulary_dict[stemmed_word]
+					outf.write(str(reviewerID)+" "+str(asin)+" "+str(word_id)+"\n")
+	outf.close()
 
 
 def main():
@@ -107,8 +133,10 @@ def main():
 	if options.summarize:
 		summarize(options.in_fname, options.out_fname)
 	elif options.convert:
-		if options.in_format == "amazon" and options.out_format == "dict":
+		if options.in_format == "amazon.json" and options.out_format == "dictionary":
 			convert_amazon_to_dict(options.dict_field, options.text_field, options.in_fname, options.out_fname)
+		elif options.in_format == "amazon.json" and options.out_format == "tensor":
+			convert_amazon_to_tensor(options.products_dict_fname, options.reviewers_dict_fname, options.vocabulary_dict_fname, options.in_fname, options.out_fname)
 
 if __name__ == "__main__":
 	main()
