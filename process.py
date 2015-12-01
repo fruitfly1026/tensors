@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import sys, re, json, gzip, pickle
+import os, sys, re, json, gzip, pickle
 from optparse import OptionParser
 from stemming.porter2 import stem
 from stop_words import get_stop_words
@@ -29,7 +29,14 @@ def summarize(infname):
 				j_max = int(tokens[1])
 			if k_max < tokens[2]:
 				k_max = int(tokens[2])
-	printf('nr_entries:%d, i_max:%d, j_max:%d, k_max:%d\n', int(nr_entries), int(i_max), int(j_max), int(k_max))
+
+	tensor_input = os.path.splitext(os.path.basename(infname))[0]
+	with open(infname, 'rb+') as outf:
+		outf.seek(0)
+		outf.write("# [Tensor dataset] "+str(tensor_input)+"\n")
+		outf.write("# [Summary] nr_entries: "+str(nr_entries)+", i_max: "+str(i_max)+", j_max: "+str(j_max)+", k_max: "+str(k_max)+"\n")
+	printf('[Tensor dataset] %s\n', str(tensor_input))
+	printf('[Summary] nr_entries:%d, i_max:%d, j_max:%d, k_max:%d\n', int(nr_entries), int(i_max), int(j_max), int(k_max))
 
 def parse_amazon(in_fname):
 	g = gzip.open(in_fname, 'r')
