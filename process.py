@@ -1,8 +1,9 @@
-#!/usr/bin/python
+#!/home/jli/Software/Install/bin/python
 
 import os, sys, re, json, gzip, pickle
 from optparse import OptionParser
 from stemming.porter2 import stem
+# from stemming.porter import stem
 from stop_words import get_stop_words
 
 #print 'nr_arguments: ', len(sys.argv)
@@ -10,7 +11,6 @@ from stop_words import get_stop_words
 
 def printf(format, *args):
         sys.stdout.write(format % args)
-
 
 def summarize(infname):
 	# Max size of each dimenstion of tensor
@@ -21,6 +21,11 @@ def summarize(infname):
 	printf('Summarizing the tensor in %s\n', infname)
 	with open(infname) as inf:
 		for line in inf:
+			# Ignore comment lines
+			tokens = line.split()
+			if tokens[0] == "#" or tokens[0] == "##":
+				# print tokens
+				continue
 			nr_entries += 1
 			tokens = map(lambda s: s.strip(), re.split('\s+', line.strip()))
 			if i_max < int(tokens[0]):
@@ -31,10 +36,15 @@ def summarize(infname):
 				k_max = int(tokens[2])
 
 	tensor_input = os.path.splitext(os.path.basename(infname))[0]
-	with open(infname, 'rb+') as outf:
+	with open(infname, 'r') as inf:
+		tempf = inf.read()
+
+	with open(infname, 'w') as outf:
 		outf.seek(0)
-		outf.write("# [Tensor dataset] "+str(tensor_input)+"\n")
-		outf.write("# [Summary] nr_entries: "+str(nr_entries)+", i_max: "+str(i_max)+", j_max: "+str(j_max)+", k_max: "+str(k_max)+"\n")
+		#outf.write("# [Tensor dataset] "+str(tensor_input)+"\n")
+		outf.write("# I J K num_nonzeros\n")
+		outf.write("# "+str(i_max)+" "+str(j_max)+" "+str(k_max)+" "+str(nr_entries)+"\n")
+		outf.write(tempf)
 	printf('[Tensor dataset] %s\n', str(tensor_input))
 	printf('[Summary] nr_entries:%d, i_max:%d, j_max:%d, k_max:%d\n', int(nr_entries), int(i_max), int(j_max), int(k_max))
 
@@ -45,11 +55,13 @@ def parse_amazon(in_fname):
 
 def convert_amazon_to_dict(dict_field, is_text, in_fname, out_fname):
 	id = 0
+	num_entries = 0
 	field_dict = {'':0}
 	stop_words = get_stop_words('en')
 
 	for entry in parse_amazon(in_fname):
 		if entry.has_key(dict_field):
+			num_entries += 1
 			# if text field, parse and populate.
 			if is_text:
 				words = entry[dict_field].split()
@@ -65,6 +77,8 @@ def convert_amazon_to_dict(dict_field, is_text, in_fname, out_fname):
 				#printf('%s -> %d\n', entry[dict_field], id)
 				#if id > 100:
 				#	break
+	print "num_entries:", num_entries
+	print "length of field_dict:", len(field_dict)
 	with open(out_fname, 'wb') as outf:
 		pickle.dump(field_dict, outf)
 
@@ -79,6 +93,7 @@ def convert_amazon_to_tensor(products_fname, reviewers_fname, vocabulary_fname, 
 	product_field="asin"
 	review_field="reviewText"
 	
+	# jli: How to change it to generator
 	with open(products_fname, 'rb') as pdictf:
 		products_dict = pickle.loads(pdictf.read())
 #	for k in sorted(mydict.keys()):
